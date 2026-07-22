@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>할일</title>
+<style>
+  :root{
+    --bg: #faf9f6;
+    --ink: #22231f;
+    --ink-soft: #4a4a44;
+    --muted: #a6a396;
+    --accent: #3f5d4a;
+    --accent-soft: #e4ebe6;
+    --hairline: #e4e1d6;
+    --serif: Iowan Old Style, "Palatino Linotype", Palatino, Georgia, "Noto Serif KR", serif;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+    --mono: "SF Mono", "Roboto Mono", Consolas, monospace;
+  }
+
+  *{ box-sizing: border-box; }
+
+  body{
+    margin:0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    padding: 12vh 24px 10vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page{
+    width:100%;
+    max-width: 460px;
+  }
+
+  .eyebrow{
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 6px 2px;
+  }
+
+  h1{
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: 34px;
+    line-height: 1.15;
+    margin: 0 0 40px 0;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+
+  .add-row{
+    display:flex;
+    align-items:center;
+    gap: 12px;
+    border-bottom: 1px solid var(--hairline);
+    padding-bottom: 14px;
+    margin-bottom: 30px;
+    transition: border-color .2s ease;
+  }
+  .add-row:focus-within{
+    border-color: var(--accent);
+  }
+
+  .add-plus{
+    font-family: var(--serif);
+    font-size: 20px;
+    color: var(--muted);
+    transition: color .2s ease, transform .2s ease;
+    line-height:1;
+  }
+  .add-row:focus-within .add-plus{
+    color: var(--accent);
+    transform: rotate(90deg);
+  }
+
+  #newTask{
+    flex:1;
+    border:none;
+    outline:none;
+    background:transparent;
+    font-family: var(--sans);
+    font-size: 16px;
+    color: var(--ink);
+    padding: 2px 0;
+  }
+  #newTask::placeholder{
+    color: var(--muted);
+    font-style: italic;
+  }
+
+  .meta-row{
+    display:flex;
+    justify-content: space-between;
+    align-items:center;
+    margin-bottom: 18px;
+  }
+
+  .tabs{
+    display:flex;
+    gap: 18px;
+  }
+  .tab{
+    background:none;
+    border:none;
+    font-family: var(--sans);
+    font-size: 13px;
+    color: var(--muted);
+    cursor:pointer;
+    padding: 2px 0;
+    position:relative;
+    transition: color .2s ease;
+  }
+  .tab:hover{ color: var(--ink-soft); }
+  .tab.active{ color: var(--ink); }
+  .tab.active::after{
+    content:"";
+    position:absolute;
+    left:0; right:0; bottom:-5px;
+    height:1px;
+    background: var(--accent);
+  }
+
+  .count{
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 0.02em;
+  }
+
+  ul{
+    list-style:none;
+    margin:0; padding:0;
+  }
+
+  li{
+    display:flex;
+    align-items:flex-start;
+    gap: 14px;
+    padding: 13px 0;
+    border-bottom: 1px solid var(--hairline);
+    animation: rise .35s ease;
+  }
+  li:last-child{ border-bottom:none; }
+
+  @keyframes rise{
+    from{ opacity:0; transform: translateY(6px); }
+    to{ opacity:1; transform: translateY(0); }
+  }
+
+  .check{
+    flex-shrink:0;
+    width: 19px;
+    height: 19px;
+    margin-top: 2px;
+    cursor:pointer;
+  }
+  .check circle{
+    fill:none;
+    stroke: var(--muted);
+    stroke-width: 1.4;
+    transition: stroke .25s ease;
+  }
+  li.done .check circle{
+    stroke: var(--accent);
+    fill: var(--accent-soft);
+  }
+  .check path{
+    fill:none;
+    stroke: var(--accent);
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 20;
+    stroke-dashoffset: 20;
+    transition: stroke-dashoffset .3s ease .05s;
+  }
+  li.done .check path{
+    stroke-dashoffset: 0;
+  }
+
+  .task-text{
+    flex:1;
+    font-size: 15.5px;
+    line-height: 1.5;
+    color: var(--ink);
+    word-break: break-word;
+    transition: color .25s ease;
+  }
+  li.done .task-text{
+    color: var(--muted);
+    text-decoration: line-through;
+    text-decoration-color: var(--muted);
+    text-decoration-thickness: 1px;
+  }
+
+  .del{
+    flex-shrink:0;
+    background:none;
+    border:none;
+    color: var(--muted);
+    font-size: 16px;
+    font-family: var(--serif);
+    cursor:pointer;
+    opacity:0;
+    transition: opacity .2s ease, color .2s ease;
+    padding: 0 2px;
+  }
+  li:hover .del{ opacity: 1; }
+  .del:hover{ color: #a1453c; }
+
+  .empty{
+    font-family: var(--serif);
+    font-style: italic;
+    color: var(--muted);
+    font-size: 15px;
+    padding: 30px 0;
+    text-align:center;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    li{ animation:none; }
+    .check path{ transition:none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <p class="eyebrow" id="dayLabel"></p>
+  <h1 id="dateLabel"></h1>
+
+  <div class="add-row">
+    <span class="add-plus">+</span>
+    <input id="newTask" type="text" placeholder="할일을 입력하고 Enter" autofocus />
+  </div>
+
+  <div class="meta-row">
+    <div class="tabs">
+      <button class="tab active" data-filter="all">전체</button>
+      <button class="tab" data-filter="active">진행중</button>
+      <button class="tab" data-filter="done">완료</button>
+    </div>
+    <span class="count" id="countLabel">0개 남음</span>
+  </div>
+
+  <ul id="list"></ul>
+  <div class="empty" id="emptyState" style="display:none;"></div>
+</div>
+
+<script>
+  const days = ["일","월","화","수","목","금","토"];
+  const now = new Date();
+  document.getElementById('dayLabel').textContent = days[now.getDay()] + "요일";
+  document.getElementById('dateLabel').textContent =
+    (now.getMonth()+1) + "월 " + now.getDate() + "일";
+
+  let tasks = [];
+  let filter = "all";
+  let uid = 0;
+
+  const listEl = document.getElementById('list');
+  const emptyEl = document.getElementById('emptyState');
+  const countEl = document.getElementById('countLabel');
+  const input = document.getElementById('newTask');
+
+  function checkboxSVG(){
+    return `<svg class="check" viewBox="0 0 20 20">
+      <circle cx="10" cy="10" r="8.5"></circle>
+      <path d="M5.5 10.5 L8.5 13.5 L14.5 7"></path>
+    </svg>`;
+  }
+
+  function render(){
+    const visible = tasks.filter(t=>{
+      if(filter === "active") return !t.done;
+      if(filter === "done") return t.done;
+      return true;
+    });
+
+    listEl.innerHTML = "";
+
+    if(visible.length === 0){
+      emptyEl.style.display = "block";
+      emptyEl.textContent = tasks.length === 0
+        ? "아직 아무것도 없어요. 첫 할일을 적어보세요."
+        : (filter === "done" ? "완료한 항목이 없어요." : "진행중인 항목이 없어요.");
+    } else {
+      emptyEl.style.display = "none";
+      visible.forEach(t=>{
+        const li = document.createElement('li');
+        li.className = t.done ? "done" : "";
+        li.dataset.id = t.id;
+        li.innerHTML = `${checkboxSVG()}<span class="task-text">${escapeHTML(t.text)}</span><button class="del" title="삭제">×</button>`;
+        listEl.appendChild(li);
+      });
+    }
+
+    const left = tasks.filter(t=>!t.done).length;
+    countEl.textContent = left + "개 남음";
+  }
+
+  function escapeHTML(str){
+    const d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+  }
+
+  function addTask(text){
+    text = text.trim();
+    if(!text) return;
+    tasks.unshift({ id: uid++, text, done:false });
+    render();
+  }
+
+  input.addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter'){
+      addTask(input.value);
+      input.value = "";
+    }
+  });
+
+  listEl.addEventListener('click', (e)=>{
+    const li = e.target.closest('li');
+    if(!li) return;
+    const id = Number(li.dataset.id);
+
+    if(e.target.closest('.check')){
+      const t = tasks.find(t=>t.id === id);
+      t.done = !t.done;
+      render();
+    }
+    if(e.target.closest('.del')){
+      tasks = tasks.filter(t=>t.id !== id);
+      render();
+    }
+  });
+
+  document.querySelectorAll('.tab').forEach(tab=>{
+    tab.addEventListener('click', ()=>{
+      document.querySelector('.tab.active').classList.remove('active');
+      tab.classList.add('active');
+      filter = tab.dataset.filter;
+      render();
+    });
+  });
+
+  render();
+</script>
+
+</body>
+</html>
